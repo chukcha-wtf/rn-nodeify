@@ -19,6 +19,7 @@ var hackFiles = require('./pkg-hacks')
 var argv = minimist(process.argv.slice(2), {
   alias: {
     i: 'install',
+    b: 'browser',
     e: 'hack',
     h: 'help'
   }
@@ -72,7 +73,7 @@ function run () {
   }
 
   function runHacks () {
-    hackPackageJSONs(toShim, function (err) {
+    hackPackageJSONs(toShim, argv.browser, function (err) {
       if (err) throw err
 
       if (argv.hack) {
@@ -172,21 +173,21 @@ function copyShim (cb) {
   })
 }
 
-function hackPackageJSONs (modules, done) {
-  fixPackageJSON(modules, './package.json', true)
+function hackPackageJSONs (modules, keepBrowser, done) {
+  fixPackageJSON(modules, keepBrowser, './package.json', true)
 
   var finder = find('./node_modules')
 
   finder.on('file', function (file) {
     if (!/\/package\.json$/.test(file)) return
 
-    fixPackageJSON(modules, file, true)
+    fixPackageJSON(modules, keepBrowser, file, true)
   })
 
   finder.once('end', done)
 }
 
-function fixPackageJSON (modules, file, overwrite) {
+function fixPackageJSON (modules, keepBrowser, file, overwrite) {
   if (/\/react\-native\//.test(file)) return
 
   fs.readFile(path.resolve(file), { encoding: 'utf8' }, function (err, contents) {
@@ -237,8 +238,11 @@ function fixPackageJSON (modules, file, overwrite) {
     })
 
     if (!deepEqual(orgBrowser, depBrowser)) {
-      pkgJson.browser = pkgJson['react-native'] = depBrowser
-      delete pkgJson.browserify
+      pkgJson['react-native'] = depBrowser
+      if (!keepBrowser) {
+        pkgJson.browser = depBrowser
+        delete pkgJson.browserify
+      }
       fs.writeFile(file, JSON.stringify(pkgJson, null, 2), rethrow)
     }
   })
@@ -256,8 +260,11 @@ function runHelp () {
         rn-nodeify --install # installs all core shims
         rn-nodeify --hack    # run all package-specific hacks
         rn-nodeify --hack rusha,fssync   # run some package-specific hacks
+        rn-nodeify --browser  #run without modifying existing browser field in modules package.json
+        
     Options:
         -h  --help                  show usage
+        -b, --browser                  keep existing browser field, only update react-native field
         -e, --hack                  run package-specific hacks (list or leave blank to run all)
         -i, --install               install shims (list or leave blank to install all)
 
