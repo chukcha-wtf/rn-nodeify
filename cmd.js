@@ -18,6 +18,7 @@ var pkg = require(pkgPath)
 var hackFiles = require('./pkg-hacks')
 var argv = minimist(process.argv.slice(2), {
   alias: {
+    c: 'core',
     i: 'install',
     b: 'browser',
     e: 'hack',
@@ -33,6 +34,16 @@ if (argv.help) {
 }
 
 function run () {
+  // override list of core modules
+  if (argv.core) {
+    if (argv.core !== true) {
+      coreList = argv.core.split(',')
+        .map(function (name) {
+          return name.trim()
+        })
+    }
+  }
+
   var toShim
   if (argv.install) {
     if (argv.install === true) {
@@ -264,7 +275,8 @@ function runHelp () {
         
     Options:
         -h  --help                  show usage
-        -b, --browser                  keep existing browser field, only update react-native field
+        -b, --browser               keep any existing browser field, only update react-native field
+        -c, --core                  override core modules list (with a list)
         -e, --hack                  run package-specific hacks (list or leave blank to run all)
         -i, --install               install shims (list or leave blank to install all)
 
