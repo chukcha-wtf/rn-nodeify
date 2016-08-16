@@ -106,6 +106,11 @@ var hackers = [
         "var Stream = require('stream');",
         "var Stream = global.StreamModule || require('stream')"
       )
+      
+      fixed = contents.replace(
+        "var debug = require('util');",
+        "var debug = require('../../util');"
+      )
 
       return contents === fixed ? null : fixed
     }
