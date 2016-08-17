@@ -107,7 +107,7 @@ var hackers = [
         "var Stream = global.StreamModule || require('stream')"
       )
       
-      fixed = contents.replace(
+      fixed = fixed.replace(
         "var debug = require('util');",
         "var debug = require('../../util');"
       )
